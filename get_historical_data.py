@@ -198,8 +198,13 @@ def main():
             del args[key]
 
     # Create the dict for the functions
-    get_historical_data_args = {"from_date": args["from_date"]}
-    del args["from_date"]
+    if "to_date" in args.keys():
+        get_historical_data_args = {"from_date": args["from_date"], "to_date": args["to_date"]}
+        del args["from_date"]
+        del args["to_date"]
+    else:
+        get_historical_data_args = {"from_date": args["from_date"]}
+        del args["from_date"]
     get_crypto_id_args = args
 
     # Run the functions
