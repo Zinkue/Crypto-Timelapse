@@ -121,6 +121,11 @@ def get_historical_data(data, vs_currency, from_date, to_date=None):
             print(f"{from_date} is not in format yyyy-MM-dd or yyyy-MM-dd hh:mm:ss")
             sys.exit()
 
+    # Check to_date greater than from_date
+    if to_date <= from_date:
+        print("--to_date can not be less than from_date")
+        sys.exit()
+
     # Obtain the data_id for each id
     pos = 1
     for ID in data["id"].unique():
