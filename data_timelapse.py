@@ -2,6 +2,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import sys
 import argparse
+import math
 
 
 def group_market_cap_rank(x):
@@ -55,21 +56,21 @@ def data_timelapse(data_path, type_data="all_data"):
         go.Scatter(
             x=data[(data["Timestamp"] == year) & (data["group_market_cap_rank"] == group)]["group_market_cap_rank"],
             y=data[(data["Timestamp"] == year) & (data["group_market_cap_rank"] == group)]
-            ["percentage_change_from_start"],
+            ["percentage_change_from_start"] + 101,
             mode="markers",
             name=str(group),
             customdata=data[(data["Timestamp"] == year) & (data["group_market_cap_rank"] == group)].values,
             hovertemplate="<b>%{customdata[4]}</b><br>" +
             "Price: %{customdata[0]:.5f}<br>" +
-            "Percentage change from start: %{y:.2f}%<br>" +
+            "Percentage change from start: %{customdata[8]:.2f}%<br>" +
             "Market cap rank : %{customdata[6]}" +
             "<extra></extra>"
         ) for group in data["group_market_cap_rank"].unique()] +
         [
         go.Scatter(
             x=[data["group_market_cap_rank"].unique()[0], data["group_market_cap_rank"].unique()[-1]],
-            y=[data[data["Timestamp"] == year]["percentage_change_from_start"].mean(),
-               data[data["Timestamp"] == year]["percentage_change_from_start"].mean()],
+            y=[data[data["Timestamp"] == year]["percentage_change_from_start"].mean() + 101,
+               data[data["Timestamp"] == year]["percentage_change_from_start"].mean() + 101],
             mode="lines+text",
             text=[round(data[data["Timestamp"] == year]["percentage_change_from_start"].mean(), 2),
                   round(data[data["Timestamp"] == year]["percentage_change_from_start"].mean(), 2)],
@@ -81,7 +82,7 @@ def data_timelapse(data_path, type_data="all_data"):
 
     sliders = [
         {
-            "pad": {"b": 10, "t": 30},
+            "pad": {"b": 10, "t": 40},
             "len": 0.9,
             "x": 0.1,
             "y": 0,
@@ -107,20 +108,20 @@ def data_timelapse(data_path, type_data="all_data"):
             x=data[(data["Timestamp"] == start_year) & (data["group_market_cap_rank"] == group)]
             ["group_market_cap_rank"],
             y=data[(data["Timestamp"] == start_year) & (data["group_market_cap_rank"] == group)]
-            ["percentage_change_from_start"],
+            ["percentage_change_from_start"] + 101,
             mode="markers",
             name=str(group),
             customdata=data[(data["Timestamp"] == start_year) & (data["group_market_cap_rank"] == group)].values,
             hovertemplate="<b>%{customdata[4]}</b><br>" +
             "Price: %{customdata[0]:.5f}<br>" +
-            "Percentage change from start: %{y:.2f}%<br>" +
+            "Percentage change from start: %{customdata[8]:.2f}%<br>" +
             "Market cap rank : %{customdata[6]}" +
             "<extra></extra>",
         ) for group in data["group_market_cap_rank"].unique()] + [
         go.Scatter(
             x=[data["group_market_cap_rank"].unique()[0], data["group_market_cap_rank"].unique()[-1]],
-            y=[data[data["Timestamp"] == start_year]["percentage_change_from_start"].mean(),
-               data[data["Timestamp"] == start_year]["percentage_change_from_start"].mean()],
+            y=[data[data["Timestamp"] == start_year]["percentage_change_from_start"].mean() + 101,
+               data[data["Timestamp"] == start_year]["percentage_change_from_start"].mean() + 101],
             mode="lines+text",
             text=[round(data[data["Timestamp"] == start_year]["percentage_change_from_start"].mean(), 2),
                   round(data[data["Timestamp"] == start_year]["percentage_change_from_start"].mean(), 2)],
@@ -132,8 +133,10 @@ def data_timelapse(data_path, type_data="all_data"):
     # Layout
     fig.update_layout(
         title="Crypto timelapse",
-        yaxis=dict(range=[-200, data["percentage_change_from_start"].max()*1.1],
-                   autorange=False, ticksuffix=" %"),
+        xaxis=dict(title="Current group market cap rank"),
+        yaxis=dict(range=[0, math.ceil(math.log10(data["percentage_change_from_start"].max()))],
+                   autorange=False, ticksuffix=" %", type="log",
+                   title="Percentage change from start"),
         updatemenus=[
             {
                 "buttons": [
@@ -155,7 +158,7 @@ def data_timelapse(data_path, type_data="all_data"):
                     }
                 ],
                 "direction": "left",
-                "pad": {"r": 10, "t": 45},
+                "pad": {"r": 10, "t": 55},
                 "type": "buttons",
                 "x": 0.1,
                 "y": 0
@@ -163,6 +166,10 @@ def data_timelapse(data_path, type_data="all_data"):
         ],
         sliders=sliders
     )
+    # Add annotation
+    fig.add_annotation(text="Note: Y-axis shifted up by 101. The hover info is not shifted.",
+                       xref="paper", yref="paper",
+                       x=0, y=1, showarrow=False)
     print("Created the layout")
 
     # Save the figure into html
