@@ -15,7 +15,7 @@ supports different fiat currencies, different range intervals
 and quantity of cryptos to show. Also, we can order de data by
 different values.
 
-It returns a [.csv](CryptoData_20220101010000_20220806020000.csv) with the prices, market cap, total volume, 
+It returns a [.csv](https://drive.google.com/file/d/13KuSF-CiODQTh1UEfatrt3kesq-Vyd76/view?usp=sharing) with the prices, market cap, total volume, 
 name and symbol of the crypto, current market cap rank 
 (at current time) per datetime.
 
@@ -39,7 +39,7 @@ three modes:
 - plot symbols with common date range
 - plot symbols that have all date range
 
-It returns a [.html](data_timelapse_symbols_all_date_range_20220101010000_20220806020000.html) with the animated plot that auto opens in
+It returns a [.html](https://drive.google.com/file/d/1IBv3xb64pVlAfkqmdLWA3E8arVqcmaMc/view?usp=sharing) with the animated plot that auto opens in
 the browser.
 
 To obtain the current .csv we used:
