@@ -38,12 +38,12 @@ def data_timelapse(data_path, type_data="all_data"):
         data = data[data["symbol"].isin(symbols)]
     elif type_data == "symbols_with_common_date_range":
         num_symbols = len(data["symbol"].unique())
-        min_date = (data.groupby(by="Timestamp").count()["symbol"]
-                    [data.groupby(by="Timestamp").count()["symbol"] == num_symbols].idxmin())
-        data = data[data["Timestamp"] >= min_date]
+        min_date = (data.groupby(by="timestamp").count()["symbol"]
+                    [data.groupby(by="timestamp").count()["symbol"] == num_symbols].idxmin())
+        data = data[data["timestamp"] >= min_date]
 
     # Add columns to data
-    data["group_market_cap_rank"] = data["market_cap_rank"].map(lambda x: group_market_cap_rank(x))
+    data["group_market_cap_rank"] = data["market_cap_rank_today"].map(lambda x: group_market_cap_rank(x))
     data["percentage_change_from_start"] = 0
     for name in data["name"].unique():
         start_price = data[data["name"] == name]["prices"].iloc[0]
@@ -54,31 +54,31 @@ def data_timelapse(data_path, type_data="all_data"):
     # Create the frames and slider
     fig = go.Figure(frames=[go.Frame(data=[
         go.Scatter(
-            x=data[(data["Timestamp"] == year) & (data["group_market_cap_rank"] == group)]["group_market_cap_rank"],
-            y=data[(data["Timestamp"] == year) & (data["group_market_cap_rank"] == group)]
+            x=data[(data["timestamp"] == year) & (data["group_market_cap_rank"] == group)]["group_market_cap_rank"],
+            y=data[(data["timestamp"] == year) & (data["group_market_cap_rank"] == group)]
             ["percentage_change_from_start"] + 101,
             mode="markers",
             name=str(group),
-            customdata=data[(data["Timestamp"] == year) & (data["group_market_cap_rank"] == group)].values,
+            customdata=data[(data["timestamp"] == year) & (data["group_market_cap_rank"] == group)].values,
             hovertemplate="<b>%{customdata[4]}</b><br>" +
-            "Price: %{customdata[0]:.5f}<br>" +
+            "Price: %{customdata[1]:.5f}<br>" +
             "Percentage change from start: %{customdata[8]:.2f}%<br>" +
-            "Market cap rank : %{customdata[6]}" +
+            "Market cap rank today: %{customdata[6]}" +
             "<extra></extra>"
         ) for group in data["group_market_cap_rank"].unique()] +
         [
         go.Scatter(
             x=[data["group_market_cap_rank"].unique()[0], data["group_market_cap_rank"].unique()[-1]],
-            y=[data[data["Timestamp"] == year]["percentage_change_from_start"].mean() + 101,
-               data[data["Timestamp"] == year]["percentage_change_from_start"].mean() + 101],
+            y=[data[data["timestamp"] == year]["percentage_change_from_start"].mean() + 101,
+               data[data["timestamp"] == year]["percentage_change_from_start"].mean() + 101],
             mode="lines+text",
-            text=[round(data[data["Timestamp"] == year]["percentage_change_from_start"].mean(), 2),
-                  round(data[data["Timestamp"] == year]["percentage_change_from_start"].mean(), 2)],
+            text=[round(data[data["timestamp"] == year]["percentage_change_from_start"].mean(), 2),
+                  round(data[data["timestamp"] == year]["percentage_change_from_start"].mean(), 2)],
             textposition="bottom right",
             name='Mean')
         ],
         name=str(year))
-        for year in data["Timestamp"].unique()])
+        for year in data["timestamp"].unique()])
 
     sliders = [
         {
@@ -102,29 +102,29 @@ def data_timelapse(data_path, type_data="all_data"):
     print("Created the frames and slider")
 
     # Initialize the data before animation
-    start_year = data["Timestamp"].unique()[0]
+    start_year = data["timestamp"].unique()[0]
     fig.add_traces([
         go.Scatter(
-            x=data[(data["Timestamp"] == start_year) & (data["group_market_cap_rank"] == group)]
+            x=data[(data["timestamp"] == start_year) & (data["group_market_cap_rank"] == group)]
             ["group_market_cap_rank"],
-            y=data[(data["Timestamp"] == start_year) & (data["group_market_cap_rank"] == group)]
+            y=data[(data["timestamp"] == start_year) & (data["group_market_cap_rank"] == group)]
             ["percentage_change_from_start"] + 101,
             mode="markers",
             name=str(group),
-            customdata=data[(data["Timestamp"] == start_year) & (data["group_market_cap_rank"] == group)].values,
+            customdata=data[(data["timestamp"] == start_year) & (data["group_market_cap_rank"] == group)].values,
             hovertemplate="<b>%{customdata[4]}</b><br>" +
-            "Price: %{customdata[0]:.5f}<br>" +
+            "Price: %{customdata[1]:.5f}<br>" +
             "Percentage change from start: %{customdata[8]:.2f}%<br>" +
-            "Market cap rank : %{customdata[6]}" +
+            "Market cap rank today: %{customdata[6]}" +
             "<extra></extra>",
         ) for group in data["group_market_cap_rank"].unique()] + [
         go.Scatter(
             x=[data["group_market_cap_rank"].unique()[0], data["group_market_cap_rank"].unique()[-1]],
-            y=[data[data["Timestamp"] == start_year]["percentage_change_from_start"].mean() + 101,
-               data[data["Timestamp"] == start_year]["percentage_change_from_start"].mean() + 101],
+            y=[data[data["timestamp"] == start_year]["percentage_change_from_start"].mean() + 101,
+               data[data["timestamp"] == start_year]["percentage_change_from_start"].mean() + 101],
             mode="lines+text",
-            text=[round(data[data["Timestamp"] == start_year]["percentage_change_from_start"].mean(), 2),
-                  round(data[data["Timestamp"] == start_year]["percentage_change_from_start"].mean(), 2)],
+            text=[round(data[data["timestamp"] == start_year]["percentage_change_from_start"].mean(), 2),
+                  round(data[data["timestamp"] == start_year]["percentage_change_from_start"].mean(), 2)],
             textposition="bottom right",
             name='Mean')
     ])
@@ -173,7 +173,10 @@ def data_timelapse(data_path, type_data="all_data"):
     print("Created the layout")
 
     # Save the figure into html
-    fig.write_html("data_timelapse.html", auto_open=True)
+    date_min = data["timestamp"].min().replace(" ", "").replace("-", "").replace(":", "")
+    date_max = data["timestamp"].max().replace(" ", "").replace("-", "").replace(":", "")
+    fig.write_html(f"data_timelapse_{type_data}_{date_min}_{date_max}.html",
+                   auto_open=True)
 
 
 def main():
